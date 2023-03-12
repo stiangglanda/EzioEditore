@@ -43,6 +43,7 @@ set(application_resource_files
     "images/undo.png"
     "images/redo.png"
     "images/icon.png"
+    "images/styleSheet.qss"
 )
 
 qt_add_resources(application "application"

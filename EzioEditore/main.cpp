@@ -5,6 +5,7 @@
 #include <QApplication>
 #include <QCommandLineParser>
 #include <QCommandLineOption>
+#include <QFile>
 
 #include "mainwindow.h"
 
@@ -22,6 +23,11 @@ int main(int argc, char *argv[])
     parser.addVersionOption();
     parser.addPositionalArgument("file", "The file to open.");
     parser.process(app);
+
+    QFile syleSheetFile(":/images/styleSheet.qss");
+    syleSheetFile.open(QFile::ReadOnly);
+    QString styleSheet=QLatin1String(syleSheetFile.readAll());
+    app.setStyleSheet(styleSheet);
 
     MainWindow mainWin;
     if (!parser.positionalArguments().isEmpty())

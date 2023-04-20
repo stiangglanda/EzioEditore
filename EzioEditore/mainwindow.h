@@ -35,6 +35,9 @@ private slots:
     bool saveAs();
     void about();
     void documentWasModified();
+    void size8();
+    void size12();
+    void size30();
 #ifndef QT_NO_SESSIONMANAGER
     void commitData(QSessionManager &);
 #endif
@@ -52,6 +55,7 @@ private:
 
     QPlainTextEdit *textEdit;
     QString curFile;
+    QFont font;
 };
 //! [0]
 

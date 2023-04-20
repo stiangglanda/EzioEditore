@@ -224,8 +224,21 @@ void MainWindow::createActions()
     menuBar()->addSeparator();
 
     QMenu *fontMenu = menuBar()->addMenu(tr("&Font"));
-//    QAction *fontsize8Act = fontMenu->addAction(tr("&Font size 8"), textEdit, &QPlainTextEdit::setFont);
-//    redoAct->setStatusTip(tr("Sets font size to 8"));
+    //QAction *fontsize8Act = fontMenu->addAction(tr("&Font size 8"), textEdit, &MainWindow::size8);
+    QAction *fontsize8Act = new QAction(tr("&Font size 8"), this);
+    fontsize8Act->setStatusTip(tr("Sets font size to 8"));
+    connect(fontsize8Act, &QAction::triggered, this, &MainWindow::size8);
+    fontMenu->addAction(fontsize8Act);
+
+    QAction *fontsize12Act = new QAction(tr("&Font size 12"), this);
+    fontsize12Act->setStatusTip(tr("Sets font size to 12"));
+    connect(fontsize12Act, &QAction::triggered, this, &MainWindow::size12);
+    fontMenu->addAction(fontsize12Act);
+
+    QAction *fontsize30Act = new QAction(tr("&Font size 30"), this);
+    fontsize30Act->setStatusTip(tr("Sets font size to 30"));
+    connect(fontsize30Act, &QAction::triggered, this, &MainWindow::size30);
+    fontMenu->addAction(fontsize30Act);
 
 
 #endif // !QT_NO_CLIPBOARD
@@ -254,6 +267,24 @@ void MainWindow::print()
     Drucken d(textEdit->toPlainText());
     d.print("",false);//add overload
     //label->setText(d.print(ui->lineEdit->text(), ui->checkBox->isChecked()));
+}
+
+void MainWindow::size8()
+{
+    font.setPointSize(8);
+    textEdit->setFont(font);
+}
+
+void MainWindow::size12()
+{
+    font.setPointSize(12);
+    textEdit->setFont(font);
+}
+
+void MainWindow::size30()
+{
+    font.setPointSize(30);
+    textEdit->setFont(font);
 }
 
 //! [32]

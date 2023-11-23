@@ -1,8 +1,12 @@
+// Copyright (C) 2016 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
+
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
 #include <QMainWindow>
 #include "drucken.h"
+#include "qtextedit.h"
 
 QT_BEGIN_NAMESPACE
 class QAction;
@@ -25,6 +29,7 @@ protected:
 
 private slots:
     void print();
+    void setMarkdown();
     void newFile();
     void open();
     bool save();
@@ -49,9 +54,11 @@ private:
     void setCurrentFile(const QString &fileName);
     QString strippedName(const QString &fullFileName);
 
-    QPlainTextEdit *textEdit;
+    QTextEdit *textEdit;
     QString curFile;
     QFont font;
+    bool isMarkdown=false;
+    QString fileContentBuffer;
 };
 
 #endif

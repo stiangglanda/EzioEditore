@@ -42,6 +42,7 @@ set(application_resource_files
     "images/print.png"
     "images/undo.png"
     "images/redo.png"
+    "images/markdown.png"
     "images/icon.png"
     "images/styleSheet.qss"
 )

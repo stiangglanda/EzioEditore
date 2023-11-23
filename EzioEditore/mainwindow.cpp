@@ -1,8 +1,9 @@
 #include <QtWidgets>
+
 #include "mainwindow.h"
 
 MainWindow::MainWindow()
-    : textEdit(new QPlainTextEdit)
+    : textEdit(new QTextEdit)
 {
     setWindowIcon(QIcon(":/images/icon.png"));
     setCentralWidget(textEdit);
@@ -21,6 +22,9 @@ MainWindow::MainWindow()
 #endif
 
     setCurrentFile(QString());
+    font.setPointSize(12);
+    font.setFamily("Cascadia Mono");
+    textEdit->setFont(font);
     setUnifiedTitleAndToolBarOnMac(true);
 }
 
@@ -65,9 +69,13 @@ bool MainWindow::saveAs()
     QFileDialog dialog(this);
     dialog.setWindowModality(Qt::WindowModal);
     dialog.setAcceptMode(QFileDialog::AcceptSave);
-    if (dialog.exec() != QDialog::Accepted)
+    QString fileName = dialog.getSaveFileName(this, tr("Save File"),
+                               "/home/jana/untitled.ef",
+                               tr("EzioFormagio (*.ef *.txt)"));
+
+    if (fileName == "")
         return false;
-    return saveFile(dialog.selectedFiles().first());
+    return saveFile(fileName);
 }
 
 void MainWindow::about()
@@ -117,14 +125,12 @@ void MainWindow::createActions()
     saveAsAct->setShortcuts(QKeySequence::SaveAs);
     saveAsAct->setStatusTip(tr("Save the document under a new name"));
 
-    //print begin
     const QIcon printIcon = QIcon::fromTheme("edit-print", QIcon(":/images/print.png"));
     QAction *printAct = new QAction(printIcon, tr("&Print"), this);
     printAct->setStatusTip(tr("Prints the page"));
     connect(printAct, &QAction::triggered, this, &MainWindow::print);
     fileMenu->addAction(printAct);
     fileToolBar->addAction(printAct);
-    //print end
 
     fileMenu->addSeparator();
 
@@ -135,13 +141,15 @@ void MainWindow::createActions()
 
     QMenu *editMenu = menuBar()->addMenu(tr("&Edit"));
     QToolBar *editToolBar = addToolBar(tr("Edit"));
+
 #ifndef QT_NO_CLIPBOARD
     const QIcon cutIcon = QIcon::fromTheme("edit-cut", QIcon(":/images/cut.png"));
     QAction *cutAct = new QAction(cutIcon, tr("Cu&t"), this);
+
     cutAct->setShortcuts(QKeySequence::Cut);
     cutAct->setStatusTip(tr("Cut the current selection's contents to the "
                             "clipboard"));
-    connect(cutAct, &QAction::triggered, textEdit, &QPlainTextEdit::cut);
+    connect(cutAct, &QAction::triggered, textEdit, &QTextEdit::cut);
     editMenu->addAction(cutAct);
     editToolBar->addAction(cutAct);
 
@@ -150,7 +158,7 @@ void MainWindow::createActions()
     copyAct->setShortcuts(QKeySequence::Copy);
     copyAct->setStatusTip(tr("Copy the current selection's contents to the "
                              "clipboard"));
-    connect(copyAct, &QAction::triggered, textEdit, &QPlainTextEdit::copy);
+    connect(copyAct, &QAction::triggered, textEdit, &QTextEdit::copy);
     editMenu->addAction(copyAct);
     editToolBar->addAction(copyAct);
 
@@ -159,7 +167,7 @@ void MainWindow::createActions()
     pasteAct->setShortcuts(QKeySequence::Paste);
     pasteAct->setStatusTip(tr("Paste the clipboard's contents into the current "
                               "selection"));
-    connect(pasteAct, &QAction::triggered, textEdit, &QPlainTextEdit::paste);
+    connect(pasteAct, &QAction::triggered, textEdit, &QTextEdit::paste);
     editMenu->addAction(pasteAct);
     editToolBar->addAction(pasteAct);
 
@@ -167,7 +175,7 @@ void MainWindow::createActions()
     QAction *undoAct = new QAction(undoIcon, tr("&Undo"), this);
     undoAct->setShortcuts(QKeySequence::Undo);
     undoAct->setStatusTip(tr("Undos recent acctivitys"));
-    connect(undoAct, &QAction::triggered, textEdit, &QPlainTextEdit::undo);
+    connect(undoAct, &QAction::triggered, textEdit, &QTextEdit::undo);
     editMenu->addAction(undoAct);
     editToolBar->addAction(undoAct);
 
@@ -175,10 +183,16 @@ void MainWindow::createActions()
     QAction *redoAct = new QAction(redoIcon, tr("&Redo"), this);
     redoAct->setShortcuts(QKeySequence::Redo);
     redoAct->setStatusTip(tr("Undos recent acctivitys"));
-    connect(redoAct, &QAction::triggered, textEdit, &QPlainTextEdit::redo);
+    connect(redoAct, &QAction::triggered, textEdit, &QTextEdit::redo);
     editMenu->addAction(redoAct);
     editToolBar->addAction(redoAct);
 
+    const QIcon markDownIcon = QIcon::fromTheme("edit-redo", QIcon(":/images/markdown.png"));
+    QAction *markDownAct = new QAction(markDownIcon, tr("&markDown"), this);
+    markDownAct->setStatusTip(tr("Toggle render document as markdown"));
+    connect(markDownAct, &QAction::triggered, this, &MainWindow::setMarkdown);
+    editMenu->addAction(markDownAct);
+    editToolBar->addAction(markDownAct);
 
     menuBar()->addSeparator();
 
@@ -199,7 +213,7 @@ void MainWindow::createActions()
     fontMenu->addAction(fontsize30Act);
 
 
-#endif
+#endif // !QT_NO_CLIPBOARD
 
     QMenu *helpMenu = menuBar()->addMenu(tr("&Help"));
     QAction *aboutAct = helpMenu->addAction(tr("&About"), this, &MainWindow::about);
@@ -208,32 +222,51 @@ void MainWindow::createActions()
 #ifndef QT_NO_CLIPBOARD
     cutAct->setEnabled(false);
     copyAct->setEnabled(false);
-    connect(textEdit, &QPlainTextEdit::copyAvailable, cutAct, &QAction::setEnabled);
-    connect(textEdit, &QPlainTextEdit::copyAvailable, copyAct, &QAction::setEnabled);
-#endif
+    connect(textEdit, &QTextEdit::copyAvailable, cutAct, &QAction::setEnabled);
+    connect(textEdit, &QTextEdit::copyAvailable, copyAct, &QAction::setEnabled);
+#endif // !QT_NO_CLIPBOARD
 }
 
 void MainWindow::print()
 {
     Drucken d(textEdit->toPlainText());
-    d.print("",false);//add overload
+    d.print("",false);
+}
+
+void MainWindow::setMarkdown()
+{
+    if(!isMarkdown)
+    {
+        fileContentBuffer=textEdit->toPlainText();
+        textEdit->setMarkdown(textEdit->toPlainText());
+        isMarkdown=true;
+    }
+    else
+    {
+        textEdit->setPlainText(fileContentBuffer);
+        textEdit->setText(fileContentBuffer);
+        isMarkdown=false;
+    }
 }
 
 void MainWindow::size8()
 {
     font.setPointSize(8);
+    font.setFamily("Cascadia Mono");
     textEdit->setFont(font);
 }
 
 void MainWindow::size12()
 {
     font.setPointSize(12);
+    font.setFamily("Cascadia Mono");
     textEdit->setFont(font);
 }
 
 void MainWindow::size30()
 {
     font.setPointSize(30);
+    font.setFamily("Cascadia Mono");
     textEdit->setFont(font);
 }
 
@@ -347,7 +380,7 @@ void MainWindow::setCurrentFile(const QString &fileName)
 
     QString shownName = curFile;
     if (curFile.isEmpty())
-        shownName = "untitled.txt";
+        shownName = "untitled.ef";
     setWindowFilePath(shownName);
 }
 
@@ -363,7 +396,6 @@ void MainWindow::commitData(QSessionManager &manager)
         if (!maybeSave())
             manager.cancel();
     } else {
-        // Non-interactive: save without asking
         if (textEdit->document()->isModified())
             save();
     }

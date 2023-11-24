@@ -239,12 +239,14 @@ void MainWindow::setMarkdown()
     {
         fileContentBuffer=textEdit->toPlainText();
         textEdit->setMarkdown(textEdit->toPlainText());
+        textEdit->setReadOnly(true);
         isMarkdown=true;
     }
     else
     {
         textEdit->setPlainText(fileContentBuffer);
         textEdit->setText(fileContentBuffer);
+        textEdit->setReadOnly(false);
         isMarkdown=false;
     }
 }
